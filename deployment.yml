@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: banking-app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: banking
+  template:
+    metadata:
+      labels:
+        app: banking
+    spec:
+      containers:
+      - name: banking-app
+        image: <ECR_URL>/banking-app:1.0
+        ports:
+        - containerPort: 8080
