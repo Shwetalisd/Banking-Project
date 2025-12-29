@@ -3,7 +3,7 @@ kind: Service
 metadata:
   name: banking-service
 spec:
-  type: NodePort
+  type: LoadBalancer
   selector:
     app: banking
   ports:
