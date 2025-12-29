@@ -1,24 +1,40 @@
 pipeline {
-  agent any
-  stages {
-    stage('Checkout') {
-      steps { git 'https://github.com/yourname/banking-app.git' }
+    agent any
+    environment {
+        ECR_REPO = "<ECR_URL>/banking-app"
+        IMAGE_TAG = "1.0"
     }
-    stage('Build & Test') {
-      steps { sh 'docker build -t banking-app .' }
+    stages {
+        stage('Checkout') {
+            steps {
+                git 'https://github.com/yourusername/banking-eks-poc.git'
+            }
+        }
+        stage('Build & Test') {
+            steps {
+                sh 'docker build -t banking-app ./app'
+            }
+        }
+        stage('Push to ECR') {
+            steps {
+                sh """
+                aws ecr get-login-password | docker login --username AWS --password-stdin <ECR_URL>
+                docker tag banking-app:latest $ECR_REPO:$IMAGE_TAG
+                docker push $ECR_REPO:$IMAGE_TAG
+                """
+            }
+        }
+        stage('Update GitOps Repo') {
+            steps {
+                sh """
+                sed -i 's|image: .*|image: $ECR_REPO:$IMAGE_TAG|' k8s/deployment.yaml
+                git config --global user.email "jenkins@bank.com"
+                git config --global user.name "Jenkins"
+                git add k8s/deployment.yaml
+                git commit -m "Update image to $IMAGE_TAG"
+                git push origin main
+                """
+            }
+        }
     }
-    stage('SonarQube Scan') { steps { sh 'echo "Scan code"' } }
-    stage('Push to ECR') {
-      steps {
-        sh '''
-        aws ecr get-login-password | docker login --username AWS --password-stdin <ECR_URL>
-        docker tag banking-app:latest <ECR_URL>/banking-app:1.0
-        docker push <ECR_URL>/banking-app:1.0
-        '''
-      }
-    }
-    stage('Update GitOps Repo') {
-      steps { sh 'git add . && git commit -m "Update image" && git push' }
-    }
-  }
 }
