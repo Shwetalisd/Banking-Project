@@ -6,8 +6,8 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/yourname/banking-gitops.git
-    path: .
+    repoURL: https://github.com/yourusername/banking-eks-poc.git
+    path: k8s
     targetRevision: main
   destination:
     server: https://kubernetes.default.svc
